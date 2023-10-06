@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
+using System.IO;
 
 namespace Microsoft.Dafny;
 
@@ -25,6 +26,11 @@ public class ProgramResolver {
       return result;
     }
     return null;
+  }
+  
+  private void LogToFile(string message) {
+    string filePath = "log.txt";  // Specify your log file path here
+    File.AppendAllText(filePath, message + Environment.NewLine);
   }
 
   public virtual void Resolve(CancellationToken cancellationToken) {
@@ -125,6 +131,8 @@ public class ProgramResolver {
 
     moduleDeclarationPointers = new();
     moduleDeclarationPointers[program.DefaultModule] = v => program.DefaultModule = (LiteralModuleDecl)v;
+    // test logging ability
+    LogToFile("Processing dependencies for module: " + program.DefaultModule.Name);
     ProcessDependencies(program.DefaultModule, defaultModuleBindings, moduleDeclarationPointers);
 
     // check for cycles in the import graph
@@ -224,6 +232,7 @@ public class ProgramResolver {
   private void ProcessDependenciesDefinition(LiteralModuleDecl literalDecl, ModuleBindings bindings,
     IDictionary<ModuleDecl, Action<ModuleDecl>> declarationPointers) {
     var module = literalDecl.ModuleDef;
+    LogToFile("Processing dependencies definition for module: " + module.Name);
     if (module.RefinementQId != null) {
       bool res = bindings.ResolveQualifiedModuleIdRootRefines(literalDecl.ModuleDef, module.RefinementQId, out var other);
       module.RefinementQId.Root = other;
@@ -278,6 +287,7 @@ public class ProgramResolver {
   private void ProcessDependencies(ModuleDecl moduleDecl, ModuleBindings bindings,
     IDictionary<ModuleDecl, Action<ModuleDecl>> declarationPointers) {
     dependencies.AddVertex(moduleDecl);
+    LogToFile("Processing dependencies for module: " + moduleDecl.Name);
     if (moduleDecl is LiteralModuleDecl literalDecl) {
       ProcessDependenciesDefinition(literalDecl, bindings, declarationPointers);
     } else if (moduleDecl is AliasModuleDecl aliasDecl) {
