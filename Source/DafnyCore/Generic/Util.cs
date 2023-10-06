@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.Boogie;
 using static Microsoft.Dafny.GenericErrors;
+using System.IO;
 
 
 namespace Microsoft.Dafny {
@@ -505,6 +506,25 @@ namespace Microsoft.Dafny {
           program.Options.OutputWriter.Write("{0} ", callee.N.SanitizedName);
         }
         program.Options.OutputWriter.Write("\n");
+      }
+    }
+
+    public static Graph<Function> GetCallGraph(Dafny.Program program){
+      var functionCallGraph = BuildFunctionCallGraph(program);
+      return functionCallGraph;
+    }
+    public static void LogFunctionCallGraph(Dafny.Program program) {
+      var functionCallGraph = BuildFunctionCallGraph(program);
+
+      using (StreamWriter sw = new StreamWriter("callgraph.txt")) {
+          foreach (var vertex in functionCallGraph.GetVertices()) {
+              var func = vertex.N;
+              sw.Write("{0},{1}=", func.SanitizedName, func.EnclosingClass.EnclosingModuleDefinition.SanitizedName);
+              foreach (var callee in vertex.Successors) {
+                  sw.Write("{0} ", callee.N.SanitizedName);
+              }
+              sw.Write("\n");
+          }
       }
     }
 

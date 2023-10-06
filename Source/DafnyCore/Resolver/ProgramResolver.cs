@@ -4,6 +4,8 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
 using System.IO;
+using Newtonsoft.Json;
+using Formatting;
 
 namespace Microsoft.Dafny;
 
@@ -87,6 +89,72 @@ public class ProgramResolver {
       cancellationToken.ThrowIfCancellationRequested();
       rewriter.PostResolve(Program);
     }
+
+    // try to log the function call graph
+    var functionCallGraph = Util.GetCallGraph(Program);
+
+    LogToFile("Getting the call graph...");
+    foreach (var vertex in functionCallGraph.GetVertices()) {
+        var func = vertex.N;
+        LogToFile(func.SanitizedName + " (" + func.EnclosingClass.EnclosingModuleDefinition.SanitizedName + ") calls:");
+        
+        if (!vertex.Successors.Any()) {
+            LogToFile("  (No callees)");
+        } else {
+            foreach (var callee in vertex.Successors) {
+                LogToFile("  -> " + callee.N.SanitizedName);
+            }
+        }
+    }
+
+    // write to a dot file
+    using (StreamWriter sw = new StreamWriter("call_graph.dot")) {
+        sw.WriteLine("digraph CallGraph {");
+
+        foreach (var vertex in functionCallGraph.GetVertices()) {
+            var func = vertex.N;
+            string functionName = func.SanitizedName + " (" + func.EnclosingClass.EnclosingModuleDefinition.SanitizedName + ")";
+
+            if (!vertex.Successors.Any()) {
+                sw.WriteLine($"  \"{functionName}\" [label=\"{functionName} (No callees)\"];");
+            } else {
+                foreach (var callee in vertex.Successors) {
+                    sw.WriteLine($"  \"{functionName}\" -> \"{callee.N.SanitizedName}\";");
+                }
+            }
+        }
+
+        sw.WriteLine("}");
+    }
+
+    // this yields the dependency graph of modules, but we want functions/methods
+    // foreach (var v in dependencies.GetVertices()){
+    //   LogToFile(v.N.FullName);
+    //   foreach (var c in v.Successors) {
+    //     LogToFile("         Dependent Module: " + c.N.FullName);
+    //   }
+    //   foreach (var f in v.N.Children){
+    //     LogToFile("Child value: " + f.ToString());
+    //     foreach (var z in f.Children){
+    //       LogToFile("      Grandchild: " + z.ToString());
+    //       foreach (var x in z.Children){
+    //         LogToFile("          Method name:" + x.ToString());
+    //       }
+    //     }
+    //   }
+    // }
+
+    // this logs method names within modules
+    // LogToFile("Now getting at method names.");
+    // foreach (var m in Program.ModuleSigs) {
+    //   LogToFile(m.Value.ToString());
+    //   foreach (var x in m.Value.StaticMembers) {
+    //     LogToFile("       static member:" + x.Value.FullName);
+        // foreach (var c in x.Value.Children) {
+        //   LogToFile("        " + c.GetType() + c.ToString());
+        // }
+    //   }
+    // }
   }
 
 
@@ -132,7 +200,7 @@ public class ProgramResolver {
     moduleDeclarationPointers = new();
     moduleDeclarationPointers[program.DefaultModule] = v => program.DefaultModule = (LiteralModuleDecl)v;
     // test logging ability
-    LogToFile("Processing dependencies for module: " + program.DefaultModule.Name);
+    // LogToFile("Processing dependencies for module: " + program.DefaultModule.Name);
     ProcessDependencies(program.DefaultModule, defaultModuleBindings, moduleDeclarationPointers);
 
     // check for cycles in the import graph
@@ -232,7 +300,7 @@ public class ProgramResolver {
   private void ProcessDependenciesDefinition(LiteralModuleDecl literalDecl, ModuleBindings bindings,
     IDictionary<ModuleDecl, Action<ModuleDecl>> declarationPointers) {
     var module = literalDecl.ModuleDef;
-    LogToFile("Processing dependencies definition for module: " + module.Name);
+    // LogToFile("Processing dependencies definition for module: " + module.Name);
     if (module.RefinementQId != null) {
       bool res = bindings.ResolveQualifiedModuleIdRootRefines(literalDecl.ModuleDef, module.RefinementQId, out var other);
       module.RefinementQId.Root = other;
@@ -287,7 +355,8 @@ public class ProgramResolver {
   private void ProcessDependencies(ModuleDecl moduleDecl, ModuleBindings bindings,
     IDictionary<ModuleDecl, Action<ModuleDecl>> declarationPointers) {
     dependencies.AddVertex(moduleDecl);
-    LogToFile("Processing dependencies for module: " + moduleDecl.Name);
+    // LogToFile("Processing dependencies for module: " + moduleDecl.Name);
+    // LogToFile(prefix + "|-- " + moduleDecl.Name);
     if (moduleDecl is LiteralModuleDecl literalDecl) {
       ProcessDependenciesDefinition(literalDecl, bindings, declarationPointers);
     } else if (moduleDecl is AliasModuleDecl aliasDecl) {
