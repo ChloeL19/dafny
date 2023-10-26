@@ -1592,7 +1592,9 @@ namespace Microsoft.Dafny {
       Contract.Requires(resolutionContext != null);
       Contract.Ensures(Contract.Result<ModuleResolver.MethodCallInformation>() == null || allowMethodCall);
 
-      Contract.Assert(e.MethodCallInfo == null); // this will be set below if the ApplySuffix is a method call
+      if (e.MethodCallInfo != null) {
+        return e.MethodCallInfo;
+      }
 
       Expression r = null;  // upon success, the expression to which the ApplySuffix resolves
       var errorCount = ErrorCount;
@@ -2028,9 +2030,6 @@ namespace Microsoft.Dafny {
         dtv.Bindings.AcceptArgumentExpressionsAsExactParameterList();
       }
 
-      if (CodeContextWrapper.Unwrap(resolutionContext.CodeContext) is ICallable caller && caller.EnclosingModule == datatypeDecl.EnclosingModuleDefinition) {
-        caller.EnclosingModule.CallGraph.AddEdge(caller, datatypeDecl);
-      }
       return ok && ctor.Formals.Count == dtv.Arguments.Count;
     }
 
