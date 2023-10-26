@@ -1,3 +1,4 @@
+using System.Net;
 // Copyright by the contributors to the Dafny Project
 // SPDX-License-Identifier: MIT
 
@@ -464,6 +465,53 @@ namespace Microsoft.Dafny {
       }
     }
 
+    // dedicated to traversing method call graph
+    class MethodCallFinder : TopDownVisitor<List<Object>> {
+        protected override bool VisitOneExpr(Expression expr, ref List<Object> calls) {
+            string filePath = "method_logs.txt";  // Specify your log file path here
+            // File.AppendAllText(filePath, "we are gonna log a method: " + expr.ToString() + Environment.NewLine);
+            // File.AppendAllText(filePath, "type of the expr: " + expr.GetType().ToString() + Environment.NewLine);
+            if (expr is MemberSelectExpr) {
+                File.AppendAllText(filePath, "this is the method we are dependent on: " + expr.ToString() + Environment.NewLine);
+                // MemberSelectExpr memberSelect = expr as MemberSelectExpr;
+                // if (memberSelect?.Member is Method method) {
+                //     calls.Add(method);
+                // }
+                calls.Add(expr);
+                // Else: It's not a method, so we simply ignore it and move on.
+            }
+        return true;
+      }
+    }
+
+    // for building a call graph of methods
+    static Graph<Object> BuildMethodCallGraph(Dafny.Program program) {
+      Graph<Object> methodCallGraph = new Graph<Object>();
+      MethodCallFinder callFinder = new MethodCallFinder();
+
+      foreach (var module in program.Modules()) {
+        foreach (var decl in module.TopLevelDecls) {
+          if (decl is TopLevelDeclWithMembers c) {
+            foreach (var member in c.Members) {
+              if (member is Method method) {
+                string filePath = "method_logs.txt";  // Specify your log file path here
+                File.AppendAllText(filePath, "we found a method: " + method.ToString() + Environment.NewLine);
+                // File.AppendAllText(filePath, "the method's body: " + method.Body.ToString() + Environment.NewLine);
+                // File.AppendAllText(filePath, "the method's requirements: " + method.Req.ToString() + Environment.NewLine);
+                List<Object> calls = new List<Object>();
+                callFinder.Visit(method.Body, calls);
+                foreach (var callee in calls) {
+                  methodCallGraph.AddEdge(method, callee);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return methodCallGraph;
+    }
+
     static Graph<Function> BuildFunctionCallGraph(Dafny.Program program) {
       Graph<Function> functionCallGraph = new Graph<Function>();
       FunctionCallFinder callFinder = new FunctionCallFinder();
@@ -472,6 +520,8 @@ namespace Microsoft.Dafny {
         foreach (var decl in module.TopLevelDecls) {
           if (decl is TopLevelDeclWithMembers c) {
             foreach (var member in c.Members) {
+              //CHLOE NOTE: perhaps also check for methods here and log these as well
+              //CHLOE NOTE: could also filter for "requires" functions here
               if (member is Function f) {
                 List<Function> calls = new List<Function>();
                 foreach (var e in f.Reads.Expressions) { if (e != null && e.E != null) { callFinder.Visit(e.E, calls); } }
@@ -513,6 +563,12 @@ namespace Microsoft.Dafny {
       var functionCallGraph = BuildFunctionCallGraph(program);
       return functionCallGraph;
     }
+
+    public static Graph<Object> GetMethodCallGraph(Dafny.Program program){
+      var methodCallGraph = BuildMethodCallGraph(program);
+      return methodCallGraph;
+    }
+
     public static void LogFunctionCallGraph(Dafny.Program program) {
       var functionCallGraph = BuildFunctionCallGraph(program);
 
@@ -993,3 +1049,5 @@ namespace Microsoft.Dafny {
     }
   }
 }
+
+

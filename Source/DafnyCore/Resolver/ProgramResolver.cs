@@ -31,7 +31,7 @@ public class ProgramResolver {
   }
   
   private void LogToFile(string message) {
-    string filePath = "log.txt";  // Specify your log file path here
+    string filePath = "log_graph.txt";  // Specify your log file path here
     File.AppendAllText(filePath, message + Environment.NewLine);
   }
 
@@ -89,42 +89,46 @@ public class ProgramResolver {
       cancellationToken.ThrowIfCancellationRequested();
       rewriter.PostResolve(Program);
     }
+    
+    // IN THE FOLLOWING, THE FUNCTION-ONLY CALLGRAPH WORKS
+    // try to log the function and method call graph
+    var methodCallGraph = Util.GetMethodCallGraph(Program);
+    // var functionCallGraph = Util.GetCallGraph(Program);
 
-    // try to log the function call graph
-    var functionCallGraph = Util.GetCallGraph(Program);
-
-    LogToFile("Getting the call graph...");
-    foreach (var vertex in functionCallGraph.GetVertices()) {
-        var func = vertex.N;
-        LogToFile(func.SanitizedName + " (" + func.EnclosingClass.EnclosingModuleDefinition.SanitizedName + ") calls:");
+    // logging function call graph only
+    // LogToFile("Getting the call graph...");
+    // foreach (var vertex in functionCallGraph.GetVertices()) {
+    //     var func = vertex.N;
+    //     LogToFile(func.SanitizedName + " (" + func.EnclosingClass.EnclosingModuleDefinition.SanitizedName + ") calls:");
         
-        if (!vertex.Successors.Any()) {
-            LogToFile("  (No callees)");
-        } else {
-            foreach (var callee in vertex.Successors) {
-                LogToFile("  -> " + callee.N.SanitizedName);
-            }
-        }
-    }
+    //     if (!vertex.Successors.Any()) {
+    //         LogToFile("  (No callees)");
+    //     } else {
+    //         foreach (var callee in vertex.Successors) {
+    //             LogToFile("  -> " + callee.N.SanitizedName);
+    //         }
+    //     }
+    // }
 
-    // write to a dot file
-    using (StreamWriter sw = new StreamWriter("call_graph.dot")) {
-        sw.WriteLine("digraph CallGraph {");
 
-        foreach (var vertex in functionCallGraph.GetVertices()) {
-            var func = vertex.N;
-            string functionName = func.SanitizedName + " (" + func.EnclosingClass.EnclosingModuleDefinition.SanitizedName + ")";
-
+    // log a graph of methods only
+    LogToFile("printing out the method and function dependency graph!");
+    foreach (var vertex in methodCallGraph.GetVertices()) {
+            // var methodName = method.SanitizedName + " (" + method.EnclosingClass.EnclosingModuleDefinition.SanitizedName + ") calls:";
+            
+            // LogToFile(methodName);
+            LogToFile(vertex.N.ToString());
+            
             if (!vertex.Successors.Any()) {
-                sw.WriteLine($"  \"{functionName}\" [label=\"{functionName} (No callees)\"];");
+                LogToFile("  (No callees)");
             } else {
                 foreach (var callee in vertex.Successors) {
-                    sw.WriteLine($"  \"{functionName}\" -> \"{callee.N.SanitizedName}\";");
+                  LogToFile("  -> " + callee.N.ToString());
+                    // if (callee.N is Microsoft.Dafny.Method calleeMethod) {
+                        // LogToFile("  -> " + calleeMethod.SanitizedName);
+                    // }
                 }
             }
-        }
-
-        sw.WriteLine("}");
     }
 
     // this yields the dependency graph of modules, but we want functions/methods

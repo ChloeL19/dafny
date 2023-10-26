@@ -195,8 +195,13 @@ to also include a directory containing the `z3` executable.
           engine.EliminateDeadVariables(program);
           engine.CollectModSets(program);
           engine.CoalesceBlocks(program);
+          // Chloe idea: print the call graph here
+          // PROBLEM: namespaces don't align for the program here.
+          // also inline all of the subtrees here (??) or find way to leverage the inline code
           engine.Inline(program);
           var inferAndVerifyOutcome = await engine.InferAndVerify(output, program, stats, programId);
+          
+          // Chloe note: probably best to create call graph here lol
           return (inferAndVerifyOutcome, stats);
 
         default:
