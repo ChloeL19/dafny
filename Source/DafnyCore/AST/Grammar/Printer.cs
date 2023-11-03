@@ -701,7 +701,8 @@ NoGhost - disable printing of functions, ghost methods, and proof
           // omit this declaration
         } else if (m is Method) {
           if (state != 0) { wr.WriteLine(); }
-          PrintMethod((Method)m, indent, false);
+          // CHLOE tweak: don't print method bodies
+          PrintMethod((Method)m, indent, true);
           var com = m as ExtremeLemma;
           if (com != null && com.PrefixLemma != null) {
             Indent(indent); wr.WriteLine("/***");
@@ -932,6 +933,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
       }
 
       int ind = indent + IndentAmount;
+      // CHLOE NOTE: when we want to print just the bodies and not the requires/ensures, we should use this
       PrintSpec("requires", f.Req, ind);
       PrintFrameSpecLine("reads", f.Reads, ind);
       PrintSpec("ensures", f.Ens, ind);
@@ -939,10 +941,11 @@ NoGhost - disable printing of functions, ghost methods, and proof
       wr.WriteLine();
       if (f.Body != null && !printSignatureOnly) {
         Indent(indent);
-        wr.WriteLine("{");
-        PrintExtendedExpr(f.Body, ind, true, false);
-        Indent(indent);
-        wr.Write("}");
+        wr.WriteLine("{ //TODO }");
+        // CHLOE EDIT: for now, don't print the body of the function
+        // PrintExtendedExpr(f.Body, ind, true, false);
+        // Indent(indent);
+        // wr.Write("}");
         if (f.ByMethodBody != null) {
           wr.Write(" by method ");
           if (options.DafnyPrintResolvedFile != null && f.ByMethodDecl != null) {
@@ -1032,6 +1035,12 @@ NoGhost - disable printing of functions, ghost methods, and proof
         Indent(indent);
         PrintStatement(method.Body, indent);
         wr.WriteLine();
+      } 
+      //CHLOE EDIT: write an empty placeholder for the body if it should exist
+      else {
+        if (method.Body != null){
+          wr.WriteLine("{ //TODO }");
+        }
       }
     }
 

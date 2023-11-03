@@ -6,6 +6,8 @@ using System.Threading;
 using System.IO;
 using Newtonsoft.Json;
 using Formatting;
+using Microsoft.Dafny.Triggers;
+using System.Reflection;
 
 namespace Microsoft.Dafny;
 
@@ -31,7 +33,7 @@ public class ProgramResolver {
   }
   
   private void LogToFile(string message) {
-    string filePath = "log_graph.txt";  // Specify your log file path here
+    string filePath = "module_tree.txt";  // Specify your log file path here
     File.AppendAllText(filePath, message + Environment.NewLine);
   }
 
@@ -90,75 +92,81 @@ public class ProgramResolver {
       rewriter.PostResolve(Program);
     }
     
-    // IN THE FOLLOWING, THE FUNCTION-ONLY CALLGRAPH WORKS
-    // try to log the function and method call graph
-    var methodCallGraph = Util.GetMethodCallGraph(Program);
-    // var functionCallGraph = Util.GetCallGraph(Program);
 
-    // logging function call graph only
-    // LogToFile("Getting the call graph...");
-    // foreach (var vertex in functionCallGraph.GetVertices()) {
-    //     var func = vertex.N;
-    //     LogToFile(func.SanitizedName + " (" + func.EnclosingClass.EnclosingModuleDefinition.SanitizedName + ") calls:");
-        
-    //     if (!vertex.Successors.Any()) {
-    //         LogToFile("  (No callees)");
-    //     } else {
-    //         foreach (var callee in vertex.Successors) {
-    //             LogToFile("  -> " + callee.N.SanitizedName);
-    //         }
+    // this yields the dependency graph of modules
+    // foreach (var v in dependencies.GetVertices())
+    // {
+    //     LogToFile(v.N.FullName);
+    //     LogToFile("Body: {");
+    //     PrintChildrenAndGrandchildren(v.N, 1);
+    //     LogToFile("}");
+    //     foreach (var c in v.Successors)
+    //     {
+    //         LogToFile("\t|--> " + c.N.FullName);
     //     }
     // }
 
+    // foreach (var d in sortedDecls){
+    //   LogToFile(d.FullDafnyName);
+    //   foreach (var dd in d.Descendants()){
+    //     LogToFile(dd.ToString());
+    //   }
+    // }
 
-    // log a graph of methods only
-    LogToFile("printing out the method and function dependency graph!");
-    foreach (var vertex in methodCallGraph.GetVertices()) {
-            // var methodName = method.SanitizedName + " (" + method.EnclosingClass.EnclosingModuleDefinition.SanitizedName + ") calls:";
-            
-            // LogToFile(methodName);
-            LogToFile(vertex.N.ToString());
-            
-            if (!vertex.Successors.Any()) {
-                LogToFile("  (No callees)");
-            } else {
-                foreach (var callee in vertex.Successors) {
-                  LogToFile("  -> " + callee.N.ToString());
-                    // if (callee.N is Microsoft.Dafny.Method calleeMethod) {
-                        // LogToFile("  -> " + calleeMethod.SanitizedName);
-                    // }
-                }
-            }
+    // print all functions and methods without bodies
+    var pr = new Printer(Console.Out, Program.Options, PrintModes.Everything);
+
+    foreach (var module in Program.Modules()) {
+        foreach (var decl in module.TopLevelDecls) {
+          if (decl is TopLevelDeclWithMembers c) {
+            pr.PrintMembers(c.Members, 0, Path.GetFullPath(Program.FullName));
+          }
+        }
     }
 
-    // this yields the dependency graph of modules, but we want functions/methods
-    // foreach (var v in dependencies.GetVertices()){
-    //   LogToFile(v.N.FullName);
-    //   foreach (var c in v.Successors) {
-    //     LogToFile("         Dependent Module: " + c.N.FullName);
-    //   }
-    //   foreach (var f in v.N.Children){
-    //     LogToFile("Child value: " + f.ToString());
-    //     foreach (var z in f.Children){
-    //       LogToFile("      Grandchild: " + z.ToString());
-    //       foreach (var x in z.Children){
-    //         LogToFile("          Method name:" + x.ToString());
+    // first pass: just extract code without "ensures"/"requires" statements
+    // next pass: just extract code without proof implementations
+    // LogToFile(Path.GetFullPath(Program.FullName));
+    // LogToFile(Program.Options.PrintMode.ToString());
+    // LogToFile(Program.Options.OutputWriter.ToString());
+    // foreach (var module in Program.Modules()) {
+    //   LogToFile(module.FullName);
+    //     foreach (var decl in module.TopLevelDecls) {
+    //       LogToFile("\t|--> " + decl.FullName);
+    //       if (decl is TopLevelDeclWithMembers c) {
+    //         pr.PrintMembers(c.Members, 0, Path.GetFullPath(Program.FullName));
+    //         foreach (var member in c.Members) {
+    //           LogToFile("\t\t|--> " + member.FullName);
+    //           if (member is Method m) {
+    //             LogToFile("\t\t\t |--> " + m.Body.ToString());
+    //           }
+    //         }
     //       }
     //     }
+    // }
+    
+    // NOT WORKING:
+    // foreach (var m in Program.Modules()){
+    //   LogToFile(m.DafnyName);
+    //   foreach (var c in m.ChildSymbols){
+    //     LogToFile(c.ToString());
     //   }
     // }
+
+    // also try iterating through moduleDeclarationPointers?
+    // also try iterating through program.modules()
 
     // this logs method names within modules
     // LogToFile("Now getting at method names.");
     // foreach (var m in Program.ModuleSigs) {
     //   LogToFile(m.Value.ToString());
-    //   foreach (var x in m.Value.StaticMembers) {
-    //     LogToFile("       static member:" + x.Value.FullName);
-        // foreach (var c in x.Value.Children) {
-        //   LogToFile("        " + c.GetType() + c.ToString());
-        // }
-    //   }
-    // }
+      // foreach (var x in m.Value.StaticMembers) {
+      //   LogToFile("       static member:" + x.Value.FullName);
+      //   foreach (var c in x.Value.Children) {
+      //     LogToFile("        " + c.GetType() + c.ToString());
+      //   }
+      // }
+    //}
   }
 
 
