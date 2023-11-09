@@ -108,12 +108,11 @@ public class ProgramResolver {
 
     // foreach (var d in sortedDecls){
     //   LogToFile(d.FullDafnyName);
-    //   foreach (var dd in d.Descendants()){
-    //     LogToFile(dd.ToString());
-    //   }
     // }
 
     // print all functions and methods without bodies
+    // TODO: traverse all of the modules, and log each subtree of modules to its own file
+    // log the removed code to its own separate file
     var pr = new Printer(Console.Out, Program.Options, PrintModes.Everything);
 
     foreach (var module in Program.Modules()) {
@@ -124,49 +123,7 @@ public class ProgramResolver {
         }
     }
 
-    // first pass: just extract code without "ensures"/"requires" statements
-    // next pass: just extract code without proof implementations
-    // LogToFile(Path.GetFullPath(Program.FullName));
-    // LogToFile(Program.Options.PrintMode.ToString());
-    // LogToFile(Program.Options.OutputWriter.ToString());
-    // foreach (var module in Program.Modules()) {
-    //   LogToFile(module.FullName);
-    //     foreach (var decl in module.TopLevelDecls) {
-    //       LogToFile("\t|--> " + decl.FullName);
-    //       if (decl is TopLevelDeclWithMembers c) {
-    //         pr.PrintMembers(c.Members, 0, Path.GetFullPath(Program.FullName));
-    //         foreach (var member in c.Members) {
-    //           LogToFile("\t\t|--> " + member.FullName);
-    //           if (member is Method m) {
-    //             LogToFile("\t\t\t |--> " + m.Body.ToString());
-    //           }
-    //         }
-    //       }
-    //     }
-    // }
-    
-    // NOT WORKING:
-    // foreach (var m in Program.Modules()){
-    //   LogToFile(m.DafnyName);
-    //   foreach (var c in m.ChildSymbols){
-    //     LogToFile(c.ToString());
-    //   }
-    // }
-
-    // also try iterating through moduleDeclarationPointers?
-    // also try iterating through program.modules()
-
-    // this logs method names within modules
-    // LogToFile("Now getting at method names.");
-    // foreach (var m in Program.ModuleSigs) {
-    //   LogToFile(m.Value.ToString());
-      // foreach (var x in m.Value.StaticMembers) {
-      //   LogToFile("       static member:" + x.Value.FullName);
-      //   foreach (var c in x.Value.Children) {
-      //     LogToFile("        " + c.GetType() + c.ToString());
-      //   }
-      // }
-    //}
+  // then we'll want to print all functions and methods without ensures/requires clauses
   }
 
 

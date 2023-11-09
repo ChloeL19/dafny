@@ -941,7 +941,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
       wr.WriteLine();
       if (f.Body != null && !printSignatureOnly) {
         Indent(indent);
-        wr.WriteLine("{ //TODO }");
+        wr.WriteLine("{ /* TODO */ }");
         // CHLOE EDIT: for now, don't print the body of the function
         // PrintExtendedExpr(f.Body, ind, true, false);
         // Indent(indent);
@@ -1019,6 +1019,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
         }
       }
 
+      // CHLOE EDIT: to remove the ensures/requires/etc statements, remove this part
       int ind = indent + IndentAmount;
       PrintSpec("requires", method.Req, ind);
       if (method.Reads.Expressions != null) {
@@ -1039,7 +1040,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
       //CHLOE EDIT: write an empty placeholder for the body if it should exist
       else {
         if (method.Body != null){
-          wr.WriteLine("{ //TODO }");
+          wr.WriteLine("{ /* TODO */ }");
         }
       }
     }
@@ -1623,6 +1624,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
           wr.Write("...;");
         } else if (s.S is AssertStmt) {
           Contract.Assert(s.ConditionOmitted);
+          // CHLOE NOTE: this is where we can remove asserts
           wr.Write("assert ...;");
         } else if (s.S is ExpectStmt) {
           Contract.Assert(s.ConditionOmitted);
