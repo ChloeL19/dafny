@@ -701,8 +701,8 @@ NoGhost - disable printing of functions, ghost methods, and proof
           // omit this declaration
         } else if (m is Method) {
           if (state != 0) { wr.WriteLine(); }
-          // CHLOE tweak: don't print method bodies
-          PrintMethod((Method)m, indent, true);
+          // CHLOE tweak
+          PrintMethod((Method)m, indent, false);
           var com = m as ExtremeLemma;
           if (com != null && com.PrefixLemma != null) {
             Indent(indent); wr.WriteLine("/***");
@@ -1019,17 +1019,18 @@ NoGhost - disable printing of functions, ghost methods, and proof
         }
       }
 
-      // CHLOE EDIT: to remove the ensures/requires/etc statements, remove this part
       int ind = indent + IndentAmount;
-      PrintSpec("requires", method.Req, ind);
-      if (method.Reads.Expressions != null) {
-        PrintFrameSpecLine("reads", method.Reads, ind);
-      }
-      if (method.Mod.Expressions != null) {
-        PrintFrameSpecLine("modifies", method.Mod, ind);
-      }
-      PrintSpec("ensures", method.Ens, ind);
-      PrintDecreasesSpec(method.Decreases, ind);
+      // CHLOE EDIT: to remove the ensures/requires/etc statements, remove the following
+      // PrintSpec("requires", method.Req, ind);
+      // if (method.Reads.Expressions != null) {
+      //   PrintFrameSpecLine("reads", method.Reads, ind);
+      // }
+      // if (method.Mod.Expressions != null) {
+      //   PrintFrameSpecLine("modifies", method.Mod, ind);
+      // }
+      // PrintSpec("ensures", method.Ens, ind);
+      // PrintDecreasesSpec(method.Decreases, ind);
+      wr.WriteLine("{ /* TODO */ }");
       wr.WriteLine();
 
       if (method.Body != null && !printSignatureOnly) {
@@ -1037,12 +1038,6 @@ NoGhost - disable printing of functions, ghost methods, and proof
         PrintStatement(method.Body, indent);
         wr.WriteLine();
       } 
-      //CHLOE EDIT: write an empty placeholder for the body if it should exist
-      else {
-        if (method.Body != null){
-          wr.WriteLine("{ /* TODO */ }");
-        }
-      }
     }
 
     void PrintKTypeIndication(ExtremePredicate.KType kType) {
@@ -1232,6 +1227,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
         Expression expr = ((PredicateStmt)stmt).Expr;
         var assertStmt = stmt as AssertStmt;
         var expectStmt = stmt as ExpectStmt;
+        // CHLOE NOTE: we will not want to print asserts or expects
         wr.Write(assertStmt != null ? "assert" :
                  expectStmt != null ? "expect" :
                  "assume");
@@ -1262,6 +1258,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
 
       } else if (stmt is RevealStmt) {
         var s = (RevealStmt)stmt;
+        // CHLOE EDIT: we will probably also not want to print reveals (?)
         wr.Write("reveal ");
         var sep = "";
         foreach (var e in s.Exprs) {
@@ -1363,6 +1360,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
         var s = (AlternativeLoopStmt)stmt;
         wr.Write("while");
         PrintAttributes(s.Attributes);
+        // CHLOE NOTE: I guess we would get rid of loop invariants here
         PrintSpec("invariant", s.Invariants, indent + IndentAmount);
         PrintDecreasesSpec(s.Decreases, indent + IndentAmount);
         PrintFrameSpecLine("modifies", s.Mod, indent + IndentAmount);
@@ -1423,6 +1421,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
         PrintModifyStmt(indent, s, false);
 
       } else if (stmt is CalcStmt) {
+        // CHLOE NOTE: don't print any calc statements
         CalcStmt s = (CalcStmt)stmt;
         if (printMode == PrintModes.NoGhost) { return; }   // Calcs don't get a "ghost" attribute, but they are.
         wr.Write("calc");
@@ -1624,7 +1623,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
           wr.Write("...;");
         } else if (s.S is AssertStmt) {
           Contract.Assert(s.ConditionOmitted);
-          // CHLOE NOTE: this is where we can remove asserts
+          // CHLOE NOTE: this is also where we can remove asserts
           wr.Write("assert ...;");
         } else if (s.S is ExpectStmt) {
           Contract.Assert(s.ConditionOmitted);
@@ -1778,6 +1777,7 @@ NoGhost - disable printing of functions, ghost methods, and proof
         PrintGuard(false, s.Guard);
       }
 
+      // CHLOE NOTE: get rid of loop invariants
       PrintSpec("invariant", s.Invariants, indent + IndentAmount);
       PrintDecreasesSpec(s.Decreases, indent + IndentAmount);
       PrintFrameSpecLine("modifies", s.Mod, indent + IndentAmount);
