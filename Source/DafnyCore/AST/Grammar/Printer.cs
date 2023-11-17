@@ -933,7 +933,8 @@ NoGhost - disable printing of functions, ghost methods, and proof
       }
 
       int ind = indent + IndentAmount;
-      // CHLOE NOTE: when we want to print just the bodies and not the requires/ensures, we should use this
+      // CHLOE NOTE: when we want to print just the bodies and not the requires/ensures, we should comment this
+      // wr.WriteLine("/* TODO */");
       PrintSpec("requires", f.Req, ind);
       PrintFrameSpecLine("reads", f.Reads, ind);
       PrintSpec("ensures", f.Ens, ind);
@@ -941,11 +942,12 @@ NoGhost - disable printing of functions, ghost methods, and proof
       wr.WriteLine();
       if (f.Body != null && !printSignatureOnly) {
         Indent(indent);
-        wr.WriteLine("{ /* TODO */ }");
-        // CHLOE EDIT: for now, don't print the body of the function
-        // PrintExtendedExpr(f.Body, ind, true, false);
-        // Indent(indent);
-        // wr.Write("}");
+        wr.WriteLine("{");
+        // wr.WriteLine("{ /* TODO */ }");
+        // CHLOE EDIT: comment the following if we don't want to print body of function
+        PrintExtendedExpr(f.Body, ind, true, false);
+        Indent(indent);
+        wr.Write("}");
         if (f.ByMethodBody != null) {
           wr.Write(" by method ");
           if (options.DafnyPrintResolvedFile != null && f.ByMethodDecl != null) {
@@ -1020,17 +1022,17 @@ NoGhost - disable printing of functions, ghost methods, and proof
       }
 
       int ind = indent + IndentAmount;
-      // CHLOE EDIT: to remove the ensures/requires/etc statements, remove the following
-      // PrintSpec("requires", method.Req, ind);
-      // if (method.Reads.Expressions != null) {
-      //   PrintFrameSpecLine("reads", method.Reads, ind);
-      // }
-      // if (method.Mod.Expressions != null) {
-      //   PrintFrameSpecLine("modifies", method.Mod, ind);
-      // }
-      // PrintSpec("ensures", method.Ens, ind);
-      // PrintDecreasesSpec(method.Decreases, ind);
-      wr.WriteLine("{ /* TODO */ }");
+      // CHLOE EDIT: to remove the ensures/requires/etc statements, comment the following
+      PrintSpec("requires", method.Req, ind);
+      if (method.Reads.Expressions != null) {
+        PrintFrameSpecLine("reads", method.Reads, ind);
+      }
+      if (method.Mod.Expressions != null) {
+        PrintFrameSpecLine("modifies", method.Mod, ind);
+      }
+      PrintSpec("ensures", method.Ens, ind);
+      PrintDecreasesSpec(method.Decreases, ind);
+      // wr.WriteLine("{ /* TODO */ }");
       wr.WriteLine();
 
       if (method.Body != null && !printSignatureOnly) {
@@ -1227,28 +1229,29 @@ NoGhost - disable printing of functions, ghost methods, and proof
         Expression expr = ((PredicateStmt)stmt).Expr;
         var assertStmt = stmt as AssertStmt;
         var expectStmt = stmt as ExpectStmt;
-        // CHLOE NOTE: we will not want to print asserts or expects
-        wr.Write(assertStmt != null ? "assert" :
-                 expectStmt != null ? "expect" :
-                 "assume");
-        if (stmt.Attributes != null) {
-          PrintAttributes(stmt.Attributes);
-        }
-        wr.Write(" ");
-        if (assertStmt != null && assertStmt.Label != null) {
-          wr.Write("{0}: ", assertStmt.Label.Name);
-        }
-        PrintExpression(expr, true);
-        if (assertStmt != null && assertStmt.Proof != null) {
-          wr.Write(" by ");
-          PrintStatement(assertStmt.Proof, indent);
-        } else if (expectStmt != null && expectStmt.Message != null) {
-          wr.Write(", ");
-          PrintExpression(expectStmt.Message, true);
-          wr.Write(";");
-        } else {
-          wr.Write(";");
-        }
+        // CHLOE NOTE: we will not want to print asserts or expects or assumes (?)
+        wr.WriteLine("/* TODO */");
+        // wr.Write(assertStmt != null ? "assert" :
+        //          expectStmt != null ? "expect" :
+        //          "assume");
+        // if (stmt.Attributes != null) {
+        //   PrintAttributes(stmt.Attributes);
+        // }
+        // wr.Write(" ");
+        // if (assertStmt != null && assertStmt.Label != null) {
+        //   wr.Write("{0}: ", assertStmt.Label.Name);
+        // }
+        // PrintExpression(expr, true);
+        // if (assertStmt != null && assertStmt.Proof != null) {
+        //   wr.Write(" by ");
+        //   PrintStatement(assertStmt.Proof, indent);
+        // } else if (expectStmt != null && expectStmt.Message != null) {
+        //   wr.Write(", ");
+        //   PrintExpression(expectStmt.Message, true);
+        //   wr.Write(";");
+        // } else {
+        //   wr.Write(";");
+        // }
 
       } else if (stmt is PrintStmt) {
         PrintStmt s = (PrintStmt)stmt;
@@ -1259,19 +1262,20 @@ NoGhost - disable printing of functions, ghost methods, and proof
       } else if (stmt is RevealStmt) {
         var s = (RevealStmt)stmt;
         // CHLOE EDIT: we will probably also not want to print reveals (?)
-        wr.Write("reveal ");
-        var sep = "";
-        foreach (var e in s.Exprs) {
-          wr.Write(sep);
-          sep = ", ";
-          if (RevealStmt.SingleName(e) != null) {
-            // this will do the printing correctly for labels (or label-lookalikes) like 00_023 (which by PrintExpression below would be printed as 23)
-            wr.Write(RevealStmt.SingleName(e));
-          } else {
-            PrintExpression(e, true);
-          }
-        }
-        wr.Write(";");
+        wr.WriteLine("/* TODO */");
+        // wr.Write("reveal ");
+        // var sep = "";
+        // foreach (var e in s.Exprs) {
+        //   wr.Write(sep);
+        //   sep = ", ";
+        //   if (RevealStmt.SingleName(e) != null) {
+        //     // this will do the printing correctly for labels (or label-lookalikes) like 00_023 (which by PrintExpression below would be printed as 23)
+        //     wr.Write(RevealStmt.SingleName(e));
+        //   } else {
+        //     PrintExpression(e, true);
+        //   }
+        // }
+        // wr.Write(";");
 
       } else if (stmt is BreakStmt) {
         var s = (BreakStmt)stmt;
@@ -1360,10 +1364,11 @@ NoGhost - disable printing of functions, ghost methods, and proof
         var s = (AlternativeLoopStmt)stmt;
         wr.Write("while");
         PrintAttributes(s.Attributes);
-        // CHLOE NOTE: I guess we would get rid of loop invariants here
-        PrintSpec("invariant", s.Invariants, indent + IndentAmount);
-        PrintDecreasesSpec(s.Decreases, indent + IndentAmount);
-        PrintFrameSpecLine("modifies", s.Mod, indent + IndentAmount);
+        // CHLOE NOTE: I guess we would get rid of loop invariants here, aka comment following 3 lines
+        wr.WriteLine("/* TODO */");
+        // PrintSpec("invariant", s.Invariants, indent + IndentAmount);
+        // PrintDecreasesSpec(s.Decreases, indent + IndentAmount);
+        // PrintFrameSpecLine("modifies", s.Mod, indent + IndentAmount);
         bool hasSpecs = s.Invariants.Count != 0 || (s.Decreases.Expressions != null && s.Decreases.Expressions.Count != 0) || s.Mod.Expressions != null;
         if (s.UsesOptionalBraces) {
           if (hasSpecs) {
@@ -1422,51 +1427,52 @@ NoGhost - disable printing of functions, ghost methods, and proof
 
       } else if (stmt is CalcStmt) {
         // CHLOE NOTE: don't print any calc statements
-        CalcStmt s = (CalcStmt)stmt;
-        if (printMode == PrintModes.NoGhost) { return; }   // Calcs don't get a "ghost" attribute, but they are.
-        wr.Write("calc");
-        PrintAttributes(stmt.Attributes);
-        wr.Write(" ");
-        if (s.UserSuppliedOp != null) {
-          PrintCalcOp(s.UserSuppliedOp);
-          wr.Write(" ");
-        } else if (options.DafnyPrintResolvedFile != null && s.Op != null) {
-          PrintCalcOp(s.Op);
-          wr.Write(" ");
-        }
-        wr.WriteLine("{");
-        int lineInd = indent + IndentAmount;
-        int lineCount = s.Lines.Count == 0 ? 0 : s.Lines.Count - 1;  // if nonempty, .Lines always contains a duplicated last line
-        // The number of op/hints is commonly one less than the number of lines, but
-        // it can also equal the number of lines for empty calc's and for calc's with
-        // a dangling hint.
-        int hintCount = s.Lines.Count != 0 && s.Hints.Last().Body.Count == 0 ? lineCount - 1 : lineCount;
-        for (var i = 0; i < lineCount; i++) {
-          var e = s.Lines[i];
-          var op = s.StepOps[i];
-          var h = s.Hints[i];
-          // print the line
-          Indent(lineInd);
-          PrintExpression(e, true, lineInd);
-          wr.WriteLine(";");
-          if (i == hintCount) {
-            break;
-          }
-          // print the operator, if any
-          if (op != null || (options.DafnyPrintResolvedFile != null && s.Op != null)) {
-            Indent(indent);  // this lines up with the "calc"
-            PrintCalcOp(op ?? s.Op);
-            wr.WriteLine();
-          }
-          // print the hints
-          foreach (var st in h.Body) {
-            Indent(lineInd);
-            PrintStatement(st, lineInd);
-            wr.WriteLine();
-          }
-        }
-        Indent(indent);
-        wr.Write("}");
+        wr.WriteLine("/* TODO */");
+        // CalcStmt s = (CalcStmt)stmt;
+        // if (printMode == PrintModes.NoGhost) { return; }   // Calcs don't get a "ghost" attribute, but they are.
+        // wr.Write("calc");
+        // PrintAttributes(stmt.Attributes);
+        // wr.Write(" ");
+        // if (s.UserSuppliedOp != null) {
+        //   PrintCalcOp(s.UserSuppliedOp);
+        //   wr.Write(" ");
+        // } else if (options.DafnyPrintResolvedFile != null && s.Op != null) {
+        //   PrintCalcOp(s.Op);
+        //   wr.Write(" ");
+        // }
+        // wr.WriteLine("{");
+        // int lineInd = indent + IndentAmount;
+        // int lineCount = s.Lines.Count == 0 ? 0 : s.Lines.Count - 1;  // if nonempty, .Lines always contains a duplicated last line
+        // // The number of op/hints is commonly one less than the number of lines, but
+        // // it can also equal the number of lines for empty calc's and for calc's with
+        // // a dangling hint.
+        // int hintCount = s.Lines.Count != 0 && s.Hints.Last().Body.Count == 0 ? lineCount - 1 : lineCount;
+        // for (var i = 0; i < lineCount; i++) {
+        //   var e = s.Lines[i];
+        //   var op = s.StepOps[i];
+        //   var h = s.Hints[i];
+        //   // print the line
+        //   Indent(lineInd);
+        //   PrintExpression(e, true, lineInd);
+        //   wr.WriteLine(";");
+        //   if (i == hintCount) {
+        //     break;
+        //   }
+        //   // print the operator, if any
+        //   if (op != null || (options.DafnyPrintResolvedFile != null && s.Op != null)) {
+        //     Indent(indent);  // this lines up with the "calc"
+        //     PrintCalcOp(op ?? s.Op);
+        //     wr.WriteLine();
+        //   }
+        //   // print the hints
+        //   foreach (var st in h.Body) {
+        //     Indent(lineInd);
+        //     PrintStatement(st, lineInd);
+        //     wr.WriteLine();
+        //   }
+        // }
+        // Indent(indent);
+        // wr.Write("}");
       } else if (stmt is NestedMatchStmt) {
         // Print ResolvedStatement, if present, as comment
         var s = (NestedMatchStmt)stmt;
@@ -1624,13 +1630,16 @@ NoGhost - disable printing of functions, ghost methods, and proof
         } else if (s.S is AssertStmt) {
           Contract.Assert(s.ConditionOmitted);
           // CHLOE NOTE: this is also where we can remove asserts
-          wr.Write("assert ...;");
+          wr.WriteLine("/* TODO */");
+          // wr.Write("assert ...;");
         } else if (s.S is ExpectStmt) {
           Contract.Assert(s.ConditionOmitted);
-          wr.Write("expect ...;");
+          // wr.Write("expect ...;");
+          wr.WriteLine("/* TODO */");
         } else if (s.S is AssumeStmt) {
           Contract.Assert(s.ConditionOmitted);
-          wr.Write("assume ...;");
+          // wr.Write("assume ...;");
+          wr.WriteLine("/* TODO */");
         } else if (s.S is IfStmt) {
           PrintIfStatement(indent, (IfStmt)s.S, s.ConditionOmitted);
         } else if (s.S is WhileStmt) {
@@ -1778,9 +1787,10 @@ NoGhost - disable printing of functions, ghost methods, and proof
       }
 
       // CHLOE NOTE: get rid of loop invariants
-      PrintSpec("invariant", s.Invariants, indent + IndentAmount);
-      PrintDecreasesSpec(s.Decreases, indent + IndentAmount);
-      PrintFrameSpecLine("modifies", s.Mod, indent + IndentAmount);
+      wr.WriteLine("/* TODO */");
+      // PrintSpec("invariant", s.Invariants, indent + IndentAmount);
+      // PrintDecreasesSpec(s.Decreases, indent + IndentAmount);
+      // PrintFrameSpecLine("modifies", s.Mod, indent + IndentAmount);
       if (omitBody) {
         wr.WriteLine();
         Indent(indent + IndentAmount);

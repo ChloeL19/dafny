@@ -38,6 +38,25 @@ public class ProgramResolver {
   }
 
   public virtual void Resolve(CancellationToken cancellationToken) {
+    // print before we do fancy resolution stuff
+    // print the hintless code to a separate dafny file
+    var filePath = "standalone/stripped/BinSearch.dfy"; // Specify the path of the output file here
+    using (var writer = new StreamWriter(filePath))
+    {
+        var pr = new Printer(writer, Program.Options, PrintModes.Everything);
+
+        foreach (var module in Program.Modules())
+        {
+            foreach (var decl in module.TopLevelDecls)
+            {
+                if (decl is TopLevelDeclWithMembers c)
+                {
+                    pr.PrintMembers(c.Members, 0, Path.GetFullPath(Program.FullName));
+                }
+            }
+        }
+    }
+
     Type.ResetScopes();
 
     Type.EnableScopes();
@@ -110,18 +129,31 @@ public class ProgramResolver {
     //   LogToFile(d.FullDafnyName);
     // }
 
-    // print all functions and methods without bodies
-    // TODO: traverse all of the modules, and log each subtree of modules to its own file
-    // log the removed code to its own separate file
-    var pr = new Printer(Console.Out, Program.Options, PrintModes.Everything);
+    // construct a map from modules to declarations
 
-    foreach (var module in Program.Modules()) {
-        foreach (var decl in module.TopLevelDecls) {
-          if (decl is TopLevelDeclWithMembers c) {
-            pr.PrintMembers(c.Members, 0, Path.GetFullPath(Program.FullName));
-          }
-        }
-    }
+    // // print each decl in topological order
+    // var filePath = "hints_removed.dfy"; // Specify the path of the output file here
+    // using (var writer = new StreamWriter(filePath))
+    // {
+    //     var pr = new Printer(writer, Program.Options, PrintModes.Everything);
+    //     foreach (var moduleDecl in sortedDecls)
+    //         {
+    //           // log full module name
+    //           writer.WriteLine("/*" + moduleDecl.FullDafnyName + "*/");
+
+    //           // iterate through all of the modules and print the one that matches the sorted decl name
+
+    //           // foreach (var decl in module.TopLevelDecls)
+    //           // {
+    //           //     // log the name of the declaration
+    //           //     // writer.WriteLine("/*" + decl.Name + "*/");
+    //           //     if (decl is TopLevelDeclWithMembers c)
+    //           //     {
+    //           //         pr.PrintMembers(c.Members, 0, Path.GetFullPath(Program.FullName));
+    //           //     }
+    //           // }
+    //         }
+    // }
 
   // then we'll want to print all functions and methods without ensures/requires clauses
   }
