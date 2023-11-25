@@ -31,32 +31,8 @@ public class ProgramResolver {
     }
     return null;
   }
-  
-  private void LogToFile(string message) {
-    string filePath = "module_tree.txt";  // Specify your log file path here
-    File.AppendAllText(filePath, message + Environment.NewLine);
-  }
 
   public virtual void Resolve(CancellationToken cancellationToken) {
-    // print before we do fancy resolution stuff
-    // print the hintless code to a separate dafny file
-    var filePath = "standalone/stripped/BinSearch.dfy"; // Specify the path of the output file here
-    using (var writer = new StreamWriter(filePath))
-    {
-        var pr = new Printer(writer, Program.Options, PrintModes.Everything);
-
-        foreach (var module in Program.Modules())
-        {
-            foreach (var decl in module.TopLevelDecls)
-            {
-                if (decl is TopLevelDeclWithMembers c)
-                {
-                    pr.PrintMembers(c.Members, 0, Path.GetFullPath(Program.FullName));
-                }
-            }
-        }
-    }
-
     Type.ResetScopes();
 
     Type.EnableScopes();
@@ -155,7 +131,24 @@ public class ProgramResolver {
     //         }
     // }
 
-  // then we'll want to print all functions and methods without ensures/requires clauses
+    // then we'll want to print all functions and methods without ensures/requires clauses
+    // print the hintless code to a separate dafny file
+    var filePath = "standalone/stripped/" + Program.filePath; // TODO: Specify the path of the output file here
+    using (var writer = new StreamWriter(filePath))
+    {
+        var pr = new Printer(writer, Program.Options, PrintModes.Everything);
+
+        foreach (var module in Program.Modules())
+        {
+            foreach (var decl in module.TopLevelDecls)
+            {
+                if (decl is TopLevelDeclWithMembers c)
+                {
+                    pr.PrintMembers(c.Members, 0, Path.GetFullPath(Program.FullName));
+                }
+            }
+        }
+    }
   }
 
 
